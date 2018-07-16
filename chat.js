@@ -165,71 +165,6 @@ function jqueryFunc(){
 
 jScript(impScripts);
 
-
-
-  var stompClient = null;
-  var connectionCheck = false;
-  var MASTERINDEX = 0;
-  var epoch = null;
-  function connect() {
-      if(connectionCheck == false){
-          var socket = new SockJS('http://54.152.186.92:85/mhbe/hello');
-          stompClient = Stomp.over(socket);
-          console.log("True Stomp");
-          stompClient.connect({}, function(frame) {
-              console.log("func in 1");
-              console.log('Connected: ' + frame);
-              stompClient.subscribe('http://54.152.186.92:85/mhbe/topic/greetings', function(greeting) {
-                  console.log(greeting.body);
-                  var temp = JSON.parse(greeting.body).content;
-                  if(temp == "Disconnected"){
-                      disconnect();
-                      generate_message(temp,'user');
-                  }
-                  else if (temp.charAt(0)== '{')
-                  {
-                      var cleared = temp.replace(/&quot;/g ,'"');
-                      var makeObj = JSON.parse(cleared).messages;
-                      makeObj.forEach(function(entry) {
-                          generate_message(entry.value,'user');
-                      });
-                  }
-                  else {
-                      generate_message(temp,'user');
-                  }
-              });
-          });
-          epoch = getEpoch();
-          connectionCheck = true;
-      }
-      else{
-          console.log("Already Connected to server");
-      }
-  }
-  function javadisconnect(){
-      var name = "disconnect"
-      stompClient.send("http://54.152.186.92:85/mhbe/app/hello", {}, JSON.stringify({
-          'name' : "cancel"
-      }));	
-  }
-  
-  function disconnect() {
-      stompClient.disconnect();	
-      connectionCheck = false;
-  }
-  function getEpoch(){
-      var milliSeconds = (new Date).getTime();
-      return "user"+milliSeconds;
-  }
-  function sendName() {
-      var name1 = document.getElementById('chat-input').value;
-      var name  = epoch +':'+name1;
-      console.log(name);
-      stompClient.send("http://54.152.186.92:85/mhbe/app/hello", {}, JSON.stringify({
-          'name' : name
-      }));
-  }
-
 document.write( '<div id=\"body\">\n' );
 document.write( '        <span id=\"chat-response\"></span>\n' );
 document.write( '        <div id=\"chat-circle\" class=\"btn btn-raised\" onclick=\"connect();\">\n' );
@@ -270,3 +205,67 @@ document.write( '        </div>\n' );
 document.write( '    </div>' );
 
 
+/*This section is used to connect the chatbot*/
+
+var stompClient = null;
+var connectionCheck = false;
+var MASTERINDEX = 0;
+var epoch = null;
+function connect() {
+    if(connectionCheck == false){
+        var socket = new SockJS('http://54.152.186.92:85/mhbe/hello');
+        stompClient = Stomp.over(socket);
+        console.log("True Stomp");
+        stompClient.connect({}, function(frame) {
+            console.log("func in 1");
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('http://54.152.186.92:85/mhbe/topic/greetings', function(greeting) {
+                console.log(greeting.body);
+                var temp = JSON.parse(greeting.body).content;
+                if(temp == "Disconnected"){
+                    disconnect();
+                    generate_message(temp,'user');
+                }
+                else if (temp.charAt(0)== '{')
+                {
+                    var cleared = temp.replace(/&quot;/g ,'"');
+                    var makeObj = JSON.parse(cleared).messages;
+                    makeObj.forEach(function(entry) {
+                        generate_message(entry.value,'user');
+                    });
+                }
+                else {
+                    generate_message(temp,'user');
+                }
+            });
+        });
+        epoch = getEpoch();
+        connectionCheck = true;
+    }
+    else{
+        console.log("Already Connected to server");
+    }
+}
+function javadisconnect(){
+    var name = "disconnect"
+    stompClient.send("http://54.152.186.92:85/mhbe/app/hello", {}, JSON.stringify({
+        'name' : "cancel"
+    }));	
+}
+
+function disconnect() {
+    stompClient.disconnect();	
+    connectionCheck = false;
+}
+function getEpoch(){
+    var milliSeconds = (new Date).getTime();
+    return "user"+milliSeconds;
+}
+function sendName() {
+    var name1 = document.getElementById('chat-input').value;
+    var name  = epoch +':'+name1;
+    console.log(name);
+    stompClient.send("http://54.152.186.92:85/mhbe/app/hello", {}, JSON.stringify({
+        'name' : name
+    }));
+}
